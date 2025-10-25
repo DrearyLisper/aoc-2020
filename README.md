@@ -14,3 +14,13 @@ aoc-2020$ mix run -e 'Day01.run'
 1019904
 176647680
 ```
+
+## Day 2: Password Philosophy
+
+[Full Solution](https://github.com/DrearyLisper/aoc-2020/tree/main/lib/02/day02.ex)
+
+``` bash
+aoc-2020$ mix run -e 'Day02.run'
+666
+670
+```

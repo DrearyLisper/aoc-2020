@@ -32,27 +32,35 @@ defmodule Day01 do
       {:ok, parse(content)}
     end
 
-    def handle_call({:check_two, i, j}, _, state) do
-      i = Enum.at(state, i)
-      j = Enum.at(state, j)
+    def handle_call({:check_two, i, j}, from, state) do
+      spawn(fn ->
+        i = Enum.at(state, i)
+        j = Enum.at(state, j)
 
-      if i + j == 2020 do
-        {:reply, {:ok, i * j}, state}
-      else
-        {:reply, {:notok}, state}
-      end
+        if i + j == 2020 do
+          GenServer.reply(from, {:ok, i * j})
+        else
+          GenServer.reply(from, {:notok})
+        end
+      end)
+
+      {:noreply, state}
     end
 
-    def handle_call({:check_three, i, j, k}, _, state) do
-      i = Enum.at(state, i)
-      j = Enum.at(state, j)
-      k = Enum.at(state, k)
+    def handle_call({:check_three, i, j, k}, from, state) do
+      spawn(fn ->
+        i = Enum.at(state, i)
+        j = Enum.at(state, j)
+        k = Enum.at(state, k)
 
-      if i + j + k == 2020 do
-        {:reply, {:ok, i * j * k}, state}
-      else
-        {:reply, {:notok}, state}
-      end
+        if i + j + k == 2020 do
+          GenServer.reply(from, {:ok, i * j * k})
+        else
+          GenServer.reply(from, {:notok})
+        end
+      end)
+
+      {:noreply, state}
     end
 
     def handle_call({:len}, _, state) do
@@ -63,34 +71,28 @@ defmodule Day01 do
   def part1 do
     {:ok, len} = Solution.len()
 
-    for(
-      {:ok, x} <-
-        for(
-          i <- 0..(len - 1),
-          j <- 0..(len - 1),
-          i < j,
-          do: Solution.check(i, j)
-        ),
-      do: x
-    )
+    Stream.flat_map(0..(len - 1), fn i ->
+      Stream.flat_map(0..(len - 1), fn j ->
+        if(i < j, do: [{i, j}], else: [])
+      end)
+    end)
+    |> Task.async_stream(fn {i, j} -> Solution.check(i, j) end, max_concurrency: 128)
+    |> then(&for {:ok, {:ok, x}} <- &1, do: x)
     |> List.first()
   end
 
   def part2 do
     {:ok, len} = Solution.len()
 
-    for(
-      {:ok, x} <-
-        for(
-          i <- 0..(len - 1),
-          j <- 0..(len - 1),
-          k <- 0..(len - 1),
-          i < j,
-          j < k,
-          do: Solution.check(i, j, k)
-        ),
-      do: x
-    )
+    Stream.flat_map(0..(len - 1), fn i ->
+      Stream.flat_map(0..(len - 1), fn j ->
+        Stream.flat_map(0..(len - 1), fn k ->
+          if(i < j and j < k, do: [{i, j, k}], else: [])
+        end)
+      end)
+    end)
+    |> Stream.map(fn {i, j, k} -> Solution.check(i, j, k) end)
+    |> then(&for {:ok, x} <- &1, do: x)
     |> List.first()
   end
 
