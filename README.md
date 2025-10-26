@@ -24,3 +24,14 @@ aoc-2020$ mix run -e 'Day02.run'
 666
 670
 ```
+
+## Day 3: Toboggan Trajectory
+
+[Full Solution](https://github.com/DrearyLisper/aoc-2020/tree/main/lib/03/day03.ex)
+
+``` bash
+aoc-2020$ mix run -e 'Day03.run'
+240
+2832009600
+```
+
